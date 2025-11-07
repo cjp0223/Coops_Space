@@ -1,0 +1,111 @@
+---
+title: "Code Review/Debugging Code"
+author: Cooper Phillips
+date: ""
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message = FALSE)
+```
+## The Assignment:
+
+*Tip: View this in the visual editor in RStudio*
+
+You want to re-create the HTML document in the `data/` folder in this repo titled `01-debugging_code.html`. Below is the workflow to do so, ***however*** you will notice if you attempt to render this R Markdown document as is, it does NOT reproduce the `01-debugging_code_output.html` file, and it won't even render until you fix some of the mistakes/missing elements. Therefore, this workflow is not reproducible! Your task is to fix the below coding workflow so that it renders and **exactly** matches the output of `01-debugging_code_output.html` (*including* whether or not certain code chunks and/or outputs are shown).
+
+There are a total of six (6) errors in the workflow below. To complete this assignment, you must: **1)** Identify and describe each of the six errors by updating the list provided below (1.67 points each), and **2)** Fix the errors so that the R Markdown file renders successfully and produces an HTML output that is identical to 01-debugging_code_output.html. Your final submission should be a knitted HTML document that exactly matches the appearance and content of `01-debugging_code_output.html`, except that your version must also include a completed list clearly explaining the six fixes you made.
+
+**List here the 6 errors you had to fix in this workflow:**
+
+1.  The document is using fill = status in the geom_histogram() command, but labeling the legend as color = "Storm Type". The correct aesthetic to label here is fill, not color. To fix this, we use the command labs(fill="Storm Type")
+
+2.  In the second plot, the code creates a color gradient scale but never maps a variable to color inside aes(). To fix this, we use the command color=lat inside aes().
+
+3.  The third issue relates to the command cex().This command is not used in ggplot2, instead, the code should use the command size. So we replace cex=3 with size=3.
+
+4.  There is a typo in the word "hurricane", where an extra letter "r" is added. Filter won't identify this and will return 0 rows. To fix this, we simply delete the extra "r" in hurricane.
+
+5.  The code to create the hurricanes object does not assign it to anything, to fix it, we must insert <- to direct R to assign hurricanes to something.
+
+6.  The final error is in the last block of code, where an extra parentheses is missing. To fix this, we simply add in an extra parentheses in the last block of code.
+
+## The workflow you need to fix begins here:
+
+#### The NOAA Atlantic Hurricane Dataset
+
+This exploratory workflow uses the `storms` data from the {dplyr} package. This dataset is based on the NOAA Atlantic hurricane database (<https://www.nhc.noaa.gov/data/#hurdat>). The data includes storm tracks of storms from 1975-2022, as well as some characteristics (like wind and air pressure) during their progression. Storms from 1979 onward are measured every six hours during the lifetime of the storm. Storms in earlier years have some missing data. Descriptions of each variable in the dataset can be found with `?storms`.
+
+We read in the data and initially explore its structure:
+
+```{r}
+library(ggplot2)
+library(dplyr)
+data("storms")
+glimpse(storms)
+```
+
+Let's first explore wind speed across all the different storm types with a histogram:
+
+```{r warning=FALSE}
+storms %>% 
+  ggplot() +
+  geom_histogram(aes(x = wind, fill = status)) +
+  theme_minimal() +
+  labs(fill = "Storm Type") +
+  ylab("Count") +
+  xlab("Sustained Wind Speed (knots)")
+```
+
+Now we want to visualize the relationship between pressure and wind speed *across latitudes*, where higher latitudes (blue) indicate locations further north:
+
+```{r warning=FALSE}
+storms %>%
+  ggplot() +
+  geom_point(aes(x = pressure, y = wind, color = lat), alpha = 0.75, size = 3) +
+  scale_color_gradientn(colors = c("red", "green", "darkblue")) +
+  theme_minimal() +
+  labs(color = "Latitude") +
+  xlab("Pressure (millibars)") +
+  ylab("Sustained Wind Speed (knots)")
+```
+
+Finally, let's visualize each hurricane's maximum diameter through the years:
+
+```{r}
+# store hurricane diam. data in a new hurricanes object
+hurricanes <- storms %>%
+  filter(status == "hurricane") %>%
+  group_by(name, year) %>%
+  summarize(max_force_diameter = max(hurricane_force_diameter, na.rm = TRUE)) %>%
+  filter(!is.na(max_force_diameter))
+head(hurricanes)
+```
+
+```{r warning=FALSE}
+hurricanes <- storms %>% 
+  filter(status == "hurricane") %>%
+  group_by(name, year) %>%
+  summarize(max_force_diameter = max(hurricane_force_diameter, na.rm = TRUE)) %>%
+  filter(!is.na(max_force_diameter))
+
+hurricanes %>%
+ggplot(aes(x = as.factor(year), y = max_force_diameter)) +
+geom_boxplot(color = "darkblue", fill = "skyblue") +
+theme_minimal() +
+xlab("Year") +
+ylab("Maximum Diameter (Nautical Miles)") +
+ggtitle("Hurricane Force Diameter by Year")
+hurricanes %>%
+  ggplot() +
+  geom_boxplot(aes(x = as.factor(year), y = max_force_diameter),
+               color = "darkblue", fill = "skyblue") +
+  theme_minimal() +
+  xlab("Year") +
+  ylab("Maximum Diameter (Nautical Miles)")
+
+```
+```{r}
+#test commit
+```
+
